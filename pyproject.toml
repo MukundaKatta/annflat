@@ -1,0 +1,68 @@
+[build-system]
+requires = ["maturin>=1.7,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "annflat"
+version = "0.1.0"
+description = "Small in-memory flat-file ANN over f32 vectors. Cosine, L2, dot."
+authors = [{ name = "Mukunda Katta" }]
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+requires-python = ">=3.10"
+keywords = ["ann", "knn", "vector-search", "embeddings", "rag"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "License :: OSI Approved :: Apache Software License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Rust",
+  "Topic :: Scientific/Engineering :: Information Analysis",
+  "Typing :: Typed",
+]
+dependencies = ["numpy>=1.24"]
+
+[project.urls]
+Homepage = "https://github.com/MukundaKatta/annflat"
+Repository = "https://github.com/MukundaKatta/annflat"
+Issues = "https://github.com/MukundaKatta/annflat/issues"
+Changelog = "https://github.com/MukundaKatta/annflat/blob/main/CHANGELOG.md"
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4", "mypy>=1.8", "ruff>=0.4", "maturin>=1.7,<2.0"]
+
+[tool.maturin]
+module-name = "annflat._native"
+python-source = "python"
+manifest-path = "crates/annflat-py/Cargo.toml"
+features = ["pyo3/extension-module"]
+strip = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+extend-exclude = [".venv", "target", "dist"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "ARG"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["ARG", "B"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+files = ["python/annflat"]
+
+[tool.pytest.ini_options]
+minversion = "7.4"
+testpaths = ["tests/python"]
+addopts = "-ra --strict-markers"
+filterwarnings = ["error"]

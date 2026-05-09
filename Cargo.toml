@@ -1,0 +1,26 @@
+[workspace]
+members = ["crates/annflat-core", "crates/annflat-py"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+authors = ["Mukunda Katta"]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+rust-version = "1.75"
+repository = "https://github.com/MukundaKatta/annflat"
+homepage = "https://github.com/MukundaKatta/annflat"
+documentation = "https://docs.rs/annflat-core"
+readme = "README.md"
+keywords = ["ann", "knn", "vector-search", "embeddings", "rag"]
+categories = ["science", "algorithms"]
+
+[workspace.dependencies]
+ndarray = { version = "0.16", features = ["rayon"] }
+rayon = "1.10"
+serde = { version = "1.0", features = ["derive"] }
+thiserror = "2.0"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
