@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "annflat"
-version = "0.1.0"
+version = "0.1.1"
 description = "Small in-memory flat-file ANN over f32 vectors. Cosine, L2, dot."
 authors = [{ name = "Mukunda Katta" }]
 license = "MIT OR Apache-2.0"

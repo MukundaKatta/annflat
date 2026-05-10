@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.1] - 2026-05-10
+
+### Added
+- `Index::remove(id)` — O(n) swap-remove of the first matching entry.
+  Returns `true` if found, `false` otherwise. `dim` is preserved.
+- `Index::save(path)` / `Index::load(path)` — JSON persistence of the
+  full index (metric, dim, ids, vectors). Round-trip-safe; binary
+  serialization deferred to v0.2.
+
+### Errors
+- New `AnnFlatError::Io` and `AnnFlatError::Serde` variants surfaced by
+  `save`/`load`.
+
 ## [0.1.0] - 2026-05-09
 
 ### Added

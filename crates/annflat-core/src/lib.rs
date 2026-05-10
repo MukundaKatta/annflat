@@ -27,6 +27,12 @@ pub type Result<T> = std::result::Result<T, AnnFlatError>;
 /// All errors surfaced by `annflat-core`.
 #[derive(Error, Debug)]
 pub enum AnnFlatError {
+    /// I/O failure during save/load.
+    #[error("io error: {0}")]
+    Io(#[from] std::io::Error),
+    /// JSON serialization or deserialization failure.
+    #[error("serde error: {0}")]
+    Serde(#[from] serde_json::Error),
     /// Caller supplied a vector of the wrong dimensionality.
     #[error("dim mismatch: expected {expected}, got {got}")]
     DimMismatch {
@@ -78,6 +84,7 @@ pub struct Hit {
 }
 
 /// In-memory flat ANN index.
+#[derive(Serialize, Deserialize)]
 pub struct Index {
     metric: Metric,
     dim: Option<usize>,
@@ -136,6 +143,38 @@ impl Index {
         self.ids.push(id.into());
         self.vectors.push(v);
         Ok(())
+    }
+
+    /// Remove the first entry whose id matches. Returns `true` if found.
+    /// O(n) — uses swap-remove so the rest of the index isn't shifted.
+    /// `dim` is preserved even after the index becomes empty.
+    pub fn remove(&mut self, id: &str) -> bool {
+        let Some(pos) = self.ids.iter().position(|s| s == id) else {
+            return false;
+        };
+        self.ids.swap_remove(pos);
+        self.vectors.swap_remove(pos);
+        true
+    }
+
+    /// Persist the entire index (metric, dim, ids, vectors) to a JSON
+    /// file. Re-load with [`Index::load`]. JSON is verbose for f32 arrays
+    /// but cross-platform and debuggable; binary persistence is on the
+    /// v0.2 list.
+    pub fn save<P: AsRef<std::path::Path>>(&self, path: P) -> Result<()> {
+        let file = std::fs::File::create(path)?;
+        let buf = std::io::BufWriter::new(file);
+        serde_json::to_writer(buf, self)?;
+        Ok(())
+    }
+
+    /// Reverse of [`Index::save`]. Loads an index previously saved with
+    /// the same crate version.
+    pub fn load<P: AsRef<std::path::Path>>(path: P) -> Result<Self> {
+        let file = std::fs::File::open(path)?;
+        let buf = std::io::BufReader::new(file);
+        let idx: Self = serde_json::from_reader(buf)?;
+        Ok(idx)
     }
 
     /// Insert many vectors. `matrix` is `(n, d)`.
@@ -444,5 +483,57 @@ mod tests {
         // Search with [1, 0]; cosine is 3/5 = 0.6.
         let hits = idx.search(&[1.0, 0.0], 1).unwrap();
         assert!((hits[0].score - 0.6).abs() < 1e-4);
+    }
+
+    #[test]
+    fn remove_present_returns_true() {
+        let mut idx = Index::new(Metric::Cosine);
+        idx.add("a", &[1.0, 0.0]).unwrap();
+        idx.add("b", &[0.0, 1.0]).unwrap();
+        assert!(idx.remove("a"));
+        assert_eq!(idx.len(), 1);
+        // Search excludes the removed id.
+        let hits = idx.search(&[1.0, 0.0], 1).unwrap();
+        assert_eq!(hits[0].id, "b");
+    }
+
+    #[test]
+    fn remove_missing_returns_false() {
+        let mut idx = Index::new(Metric::Cosine);
+        idx.add("a", &[1.0, 0.0]).unwrap();
+        assert!(!idx.remove("nonexistent"));
+        assert_eq!(idx.len(), 1);
+    }
+
+    #[test]
+    fn save_load_round_trip() {
+        let dir = std::env::temp_dir().join(format!(
+            "annflat-test-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("index.json");
+
+        let mut idx = Index::new(Metric::Cosine);
+        idx.add("a", &[1.0, 0.0]).unwrap();
+        idx.add("b", &[0.0, 1.0]).unwrap();
+        idx.add("c", &[0.6, 0.8]).unwrap();
+        idx.save(&path).unwrap();
+
+        let loaded = Index::load(&path).unwrap();
+        assert_eq!(loaded.len(), 3);
+        assert_eq!(loaded.metric(), Metric::Cosine);
+        let hits = loaded.search(&[1.0, 0.0], 3).unwrap();
+        assert_eq!(hits[0].id, "a");
+    }
+
+    #[test]
+    fn load_nonexistent_path_errors() {
+        let r = Index::load("/no/such/path/should/exist.json");
+        assert!(r.is_err());
     }
 }

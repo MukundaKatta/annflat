@@ -129,6 +129,24 @@ impl PyIndex {
             .collect())
     }
 
+    fn remove(&mut self, py: Python<'_>, id: &str) -> bool {
+        let owned = id.to_owned();
+        py.allow_threads(move || self.inner.remove(&owned))
+    }
+
+    fn save(&self, py: Python<'_>, path: std::path::PathBuf) -> PyResult<()> {
+        py.allow_threads(move || self.inner.save(path))
+            .map_err(map_err)
+    }
+
+    #[staticmethod]
+    fn load(py: Python<'_>, path: std::path::PathBuf) -> PyResult<Self> {
+        let inner = py
+            .allow_threads(move || annflat_core::Index::load(path))
+            .map_err(map_err)?;
+        Ok(Self { inner })
+    }
+
     fn __len__(&self) -> usize {
         self.inner.len()
     }
