@@ -65,7 +65,9 @@ def find_manifests() -> list[Path]:
         current_path = Path(current)
         for filename in files:
             path = current_path / filename
-            if (filename in MANIFEST_NAMES or path.suffix in MANIFEST_SUFFIXES) and path.stat().st_size > 0:
+            if (
+                filename in MANIFEST_NAMES or path.suffix in MANIFEST_SUFFIXES
+            ) and path.stat().st_size > 0:
                 manifests.append(path)
     return sorted(manifests, key=lambda path: str(path.relative_to(ROOT)))
 
