@@ -24,7 +24,7 @@ rayon-core = ">=1.12, <1.13"
 serde = { version = "1.0", features = ["derive"] }
 # pyo3-macros-backend permits newer rustc-hash releases, but 2.1 raised
 # its rust-version above this workspace's MSRV.
-rustc-hash = ">=2.0, <2.1"
+rustc-hash = ">=2.0, <2.2"
 # JSON persistence for `Index::save` / `Index::load`. Core-only.
 serde_json = "1.0"
 thiserror = "2.0"
