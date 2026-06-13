@@ -20,7 +20,7 @@ ndarray = { version = "0.16", features = ["rayon"] }
 rayon = ">=1.10, <1.11"
 # Keep the transitive rayon-core resolver below the Rust 1.80 line while the
 # workspace advertises Rust 1.75 support.
-rayon-core = ">=1.12, <1.13"
+rayon-core = ">=1.12, <1.14"
 serde = { version = "1.0", features = ["derive"] }
 # pyo3-macros-backend permits newer rustc-hash releases, but 2.1 raised
 # its rust-version above this workspace's MSRV.
