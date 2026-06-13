@@ -19,5 +19,5 @@ crate-type = ["cdylib"]
 annflat-core = { path = "../annflat-core", version = "0.1.0" }
 pyo3 = { version = "0.23", features = ["abi3-py310", "extension-module"] }
 rustc-hash = { workspace = true }
-numpy = "0.23"
+numpy = "0.29"
 ndarray = { workspace = true }
